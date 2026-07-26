@@ -75,6 +75,16 @@ Running the app prints a mode-comparison for one profile so you can see the same
 different rankings — for example, Mood-First drops an `intense` song out of the top 3 for a
 listener who wants `happy`, while Energy-Focused pulls the highest-energy songs up.
 
+### Diversity & Fairness Penalty
+
+To avoid a single artist or genre dominating the results, `recommend_songs(..., diversity=True)`
+applies a fairness re-ranker. Because a song's penalty depends on what is *already* in the list,
+this happens at rank time (not in per-song scoring): the top-k is built greedily, and each
+candidate loses points for every already-chosen song that shares its **artist** (−1.5 each) or
+**genre** (−0.75 each). For the Chill Lofi profile this breaks up a LoRoom "monopoly" — with the
+penalty on, two LoRoom tracks drop and an ambient and a jazz song rise into the top 5. The
+penalty is shown in the song's reasons so the drop stays explainable, and it is off by default.
+
 ### Potential Biases I Expect
 
 - **Genre over-prioritization.** Genre is the heaviest weight (2.0), so the system can favor a

@@ -83,6 +83,20 @@ def compare_modes(name: str, user_prefs: dict, songs: list, k: int = 3) -> None:
             print(f"  {rank}. {song['title']:<18} ({song['genre']}/{song['mood']})  {score:.2f}")
 
 
+def compare_diversity(name: str, user_prefs: dict, songs: list, k: int = 5) -> None:
+    """Show one profile's top-k with the diversity/fairness penalty off vs on."""
+    banner = f"DIVERSITY COMPARISON for '{name}'"
+    print()
+    print("#" * len(banner))
+    print(banner)
+    print("#" * len(banner))
+    for label, use_div in (("diversity OFF", False), ("diversity ON", True)):
+        print(f"\n-- {label} --")
+        for rank, (song, score, _) in enumerate(
+                recommend_songs(user_prefs, songs, k=k, diversity=use_div), start=1):
+            print(f"  {rank}. {song['title']:<18} ({song['artist']}, {song['genre']})  {score:.2f}")
+
+
 def main() -> None:
     songs = load_songs("data/songs.csv")
     print(f"Loaded songs: {len(songs)}")
@@ -95,6 +109,9 @@ def main() -> None:
 
     # Show how switching strategies re-ranks a single profile.
     compare_modes("High-Energy Pop", USER_PROFILES["High-Energy Pop"], songs, k=3)
+
+    # Show how the diversity penalty breaks up an artist/genre monopoly.
+    compare_diversity("Chill Lofi", USER_PROFILES["Chill Lofi"], songs, k=5)
 
 
 if __name__ == "__main__":

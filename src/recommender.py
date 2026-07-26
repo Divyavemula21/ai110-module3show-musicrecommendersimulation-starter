@@ -19,6 +19,13 @@ POPULARITY_WEIGHT = 0.5    # bonus scaled by the user's popularity preference
 EXPLICIT_PENALTY = 3.0     # penalty when a song is explicit and the user opted out
 MAX_MATCHED_TAGS = 2       # cap on how many tags can earn points
 
+# --- Diversity / fairness penalties ------------------------------------------
+# Applied at RANK time (not per-song), to avoid filling the top results with the
+# same artist or genre. Each already-selected song sharing the candidate's
+# artist/genre subtracts these points from the candidate's score.
+ARTIST_DIVERSITY_PENALTY = 1.5   # per earlier top-list song by the same artist
+GENRE_DIVERSITY_PENALTY = 0.75   # per earlier top-list song of the same genre
+
 
 # --- Scoring modes (Strategy pattern) ----------------------------------------
 # Each "mode" is a strategy: an interchangeable bundle of weights that the ONE
@@ -238,6 +245,64 @@ def _explanation_from_reasons(reasons: List[str]) -> str:
     return "Recommended because " + ", ".join(reasons) + "."
 
 
+def _diversified_order(
+    entries: List[Tuple[object, float, List[str], str, str]],
+    k: int,
+    artist_penalty: float = ARTIST_DIVERSITY_PENALTY,
+    genre_penalty: float = GENRE_DIVERSITY_PENALTY,
+) -> List[Tuple[object, float, List[str]]]:
+    """
+    Greedily build a diverse top-k list (a fairness re-ranker).
+
+    `entries` is a list of (item, base_score, reasons, artist, genre) sorted by
+    base_score descending. We repeatedly pick the best *adjusted* candidate,
+    where the adjustment subtracts a penalty for every already-chosen song that
+    shares the candidate's artist or genre. Because the penalty depends on what
+    has already been picked, this cannot be done in per-song scoring — it has to
+    happen here, at rank time.
+
+    Returns a list of (item, adjusted_score, reasons); when a song was penalized,
+    a "diversity penalty" note is appended to its reasons so the drop is visible.
+    """
+    selected: List[Tuple[object, float, List[str]]] = []
+    chosen_artists: List[str] = []
+    chosen_genres: List[str] = []
+    remaining = list(entries)
+
+    while remaining and len(selected) < k:
+        best_idx = 0
+        best_adj = None
+        for i, (_item, base, _reasons, artist, genre) in enumerate(remaining):
+            a_count = chosen_artists.count(artist)
+            g_count = chosen_genres.count(genre)
+            adj = base - artist_penalty * a_count - genre_penalty * g_count
+            # entries are pre-sorted by base score, so the first max wins ties,
+            # keeping the higher base-scored song ahead when penalties are equal.
+            if best_adj is None or adj > best_adj:
+                best_adj = adj
+                best_idx = i
+
+        item, base, reasons, artist, genre = remaining.pop(best_idx)
+        a_count = chosen_artists.count(artist)
+        g_count = chosen_genres.count(genre)
+        penalty = artist_penalty * a_count + genre_penalty * g_count
+
+        reasons = list(reasons)
+        if penalty > 0:
+            notes = []
+            if a_count:
+                notes.append(f"{a_count} earlier by {artist}")
+            if g_count:
+                notes.append(f"{g_count} earlier {genre} song(s)")
+            reasons.append(f"diversity penalty ({'; '.join(notes)}) (-{penalty:.2f})")
+
+        selected.append((item, base - penalty, reasons))
+        chosen_artists.append(artist)
+        chosen_genres.append(genre)
+
+    return selected
+
+
 class Recommender:
     """
     OOP implementation of the recommendation logic.
@@ -272,10 +337,12 @@ class Recommender:
         )
 
     def recommend(self, user: UserProfile, k: int = 5,
-                  mode: Optional[ScoringMode] = None) -> List[Song]:
+                  mode: Optional[ScoringMode] = None,
+                  diversity: bool = False) -> List[Song]:
         """Return the top-k Songs for a user, ranked highest score first.
 
         Pass a ScoringMode to rank with a different strategy (e.g. GENRE_FIRST).
+        Pass diversity=True to apply the artist/genre fairness re-ranker.
         """
         # Ranking rule: score every song, sort by score descending, take top k.
         ranked = sorted(
@@ -283,6 +350,12 @@ class Recommender:
             key=lambda song: self._score_song(user, song, mode)[0],
             reverse=True,
         )
+        if diversity:
+            entries = [
+                (song, self._score_song(user, song, mode)[0], [], song.artist, song.genre)
+                for song in ranked
+            ]
+            return [item for item, _adj, _reasons in _diversified_order(entries, k)]
         return ranked[:k]
 
     def explain_recommendation(self, user: UserProfile, song: Song,
@@ -366,7 +439,8 @@ def score_song(user_prefs: Dict, song: Dict,
 
 
 def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5,
-                    mode: Optional[ScoringMode] = None) -> List[Tuple[Dict, float, List[str]]]:
+                    mode: Optional[ScoringMode] = None,
+                    diversity: bool = False) -> List[Tuple[Dict, float, List[str]]]:
     """
     Functional implementation of the recommendation logic (the ranking rule).
     Required by src/main.py
@@ -377,6 +451,10 @@ def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5,
     Callers can print the reasons individually or join them into a sentence
     with _explanation_from_reasons(). Pass a ScoringMode to rank with a
     different strategy.
+
+    When diversity=True, a fairness re-ranker (`_diversified_order`) penalizes
+    songs whose artist or genre already appears higher in the list, so the top
+    results are not dominated by one artist or genre.
     """
     scored: List[Tuple[Dict, float, List[str]]] = []
     for song in songs:
@@ -384,4 +462,8 @@ def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5,
         scored.append((song, score, reasons))
 
     scored.sort(key=lambda item: item[1], reverse=True)
+
+    if diversity:
+        entries = [(s, sc, r, s.get("artist", ""), s.get("genre", "")) for s, sc, r in scored]
+        return _diversified_order(entries, k)  # type: ignore[return-value]
     return scored[:k]

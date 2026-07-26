@@ -96,3 +96,30 @@ existing tests kept passing.
 I verified it by running `python -m src.main`: switching to Mood-First pushed happy-mood songs up
 and dropped an intense-mood song out of the top 3, while Energy-Focused pulled the highest-energy
 songs up — different rankings from the same code, exactly what the pattern is for.
+
+---
+
+## Diversity & Fairness Penalty (Challenge 3)
+
+> Adding a rule so the top results are not dominated by one artist or genre.
+
+**Prompt I used:**
+
+"In `recommend_songs`, add an optional diversity re-ranker. After scoring and sorting all songs,
+build the top-k greedily: when picking the next song, subtract a penalty from its score for every
+song already in the list that shares its artist (a strong penalty) and a smaller penalty for
+every one that shares its genre. This should stop one artist or genre from filling the top
+results. Keep it optional (default off) so existing behavior and tests don't change, and add a
+reason note when a song is penalized so the drop is explainable."
+
+**What the AI generated / changed and what I verified:**
+
+- The AI pointed out that a diversity penalty *cannot* live in the per-song scoring function,
+  because a song's penalty depends on which songs were already picked. So it built a rank-time
+  helper, `_diversified_order()`, that greedily selects songs and penalizes each candidate by
+  −1.5 per earlier song with the same artist and −0.75 per earlier song of the same genre.
+- It added a `diversity=False` flag to `recommend_songs()` and `Recommender.recommend()`.
+- I verified with `python -m src.main`: for the Chill Lofi profile, diversity OFF returns three
+  LoRoom songs in the top 4; diversity ON keeps only one LoRoom song near the top and lifts an
+  ambient and a jazz track into the top 5. The starter tests still pass because the penalty is
+  off by default.
