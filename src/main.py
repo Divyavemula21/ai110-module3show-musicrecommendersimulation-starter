@@ -9,6 +9,8 @@ You will implement the functions in recommender.py:
 - recommend_songs
 """
 
+import textwrap
+
 from src.recommender import load_songs, recommend_songs, MODES, BALANCED
 
 # Switch the ranking strategy here. Options come from recommender.MODES:
@@ -48,9 +50,51 @@ USER_PROFILES = {
 }
 
 
+def render_table(rows: list, reason_width: int = 46) -> str:
+    """
+    Render recommendations as a bordered ASCII table (no external dependency).
+
+    `rows` is a list of (rank, title, artist, score, reasons_list). The Reasons
+    column lists each reason on its own line (wrapped to reason_width) so the
+    point breakdown behind every score stays visible in the table.
+
+    (A library like `tabulate` could produce a similar table in one call; plain
+    ASCII is used here so the app runs with no extra install.)
+    """
+    headers = ["#", "Title", "Artist", "Score", "Reasons"]
+    w_rank = max(len(headers[0]), *(len(str(r[0])) for r in rows))
+    w_title = max(len(headers[1]), *(len(r[1]) for r in rows))
+    w_artist = max(len(headers[2]), *(len(r[2]) for r in rows))
+    w_score = max(len(headers[3]), *(len(f"{r[3]:.2f}") for r in rows))
+    w_reason = max(len(headers[4]), reason_width)
+    widths = (w_rank, w_title, w_artist, w_score, w_reason)
+
+    def hline() -> str:
+        return "+" + "+".join("-" * (w + 2) for w in widths) + "+"
+
+    def row(c0, c1, c2, c3, c4) -> str:
+        return (f"| {c0:<{w_rank}} | {c1:<{w_title}} | {c2:<{w_artist}} "
+                f"| {c3:>{w_score}} | {c4:<{w_reason}} |")
+
+    lines = [hline(), row(*headers), hline()]
+    for rank, title, artist, score, reasons in rows:
+        reason_lines: list = []
+        for reason in reasons:
+            reason_lines.extend(textwrap.wrap(reason, w_reason) or [""])
+        if not reason_lines:
+            reason_lines = [""]
+        for i, rline in enumerate(reason_lines):
+            if i == 0:
+                lines.append(row(str(rank), title, artist, f"{score:.2f}", rline))
+            else:
+                lines.append(row("", "", "", "", rline))
+        lines.append(hline())
+    return "\n".join(lines)
+
+
 def print_recommendations(name: str, user_prefs: dict, songs: list, k: int = 5,
-                          mode=None) -> None:
-    """Print the top-k recommendations for one named taste profile."""
+                          mode=None, diversity: bool = False) -> None:
+    """Print the top-k recommendations for one named taste profile as a table."""
     header = f"{name}  ({user_prefs['genre']} / {user_prefs['mood']} / energy {user_prefs['energy']})"
     print()
     print("=" * len(header))
@@ -58,15 +102,12 @@ def print_recommendations(name: str, user_prefs: dict, songs: list, k: int = 5,
     print("=" * len(header))
 
     # Each recommendation is (song, score, reasons) — see recommend_songs().
-    for rank, (song, score, reasons) in enumerate(
-            recommend_songs(user_prefs, songs, k=k, mode=mode), start=1):
-        print()
-        print(f"{rank}. {song['title']} - {song['artist']}")
-        print(f"   Score: {score:.2f}")
-        print("   Reasons:")
-        for reason in reasons:
-            print(f"     - {reason}")
-    print()
+    rows = [
+        (rank, song["title"], song["artist"], score, reasons)
+        for rank, (song, score, reasons) in enumerate(
+            recommend_songs(user_prefs, songs, k=k, mode=mode, diversity=diversity), start=1)
+    ]
+    print(render_table(rows))
 
 
 def compare_modes(name: str, user_prefs: dict, songs: list, k: int = 3) -> None:

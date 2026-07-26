@@ -137,148 +137,59 @@ You can add more tests in `tests/test_recommender.py`.
 
 ## Sample Recommendation Output
 
-Below is terminal output from `python -m src.main`, which runs four distinct taste profiles
-using the advanced features (decade, mood tags, language, popularity, explicit filter). The
-top 3 of each profile are shown here — run the app for the full top 5. Each entry lists the
-song, its final score, and the specific reasons (with point values) that produced it.
-
-### High-Energy Pop  (pop / happy / energy 0.9, 2020s, likes euphoric/energetic, english, popular)
+The recommendations are printed as a formatted ASCII table (Challenge 4) that includes the
+song, artist, final score, and the specific **reasons** (with point values) behind each score.
+`python -m src.main` prints one table per profile; the **High-Energy Pop** table below is a
+representative example (the other three profiles render the same way).
 
 ```
-1. Sunrise City - Neon Echo
-   Score: 6.75
-   Reasons:
-     - genre match: pop (+2.0)
-     - mood match: happy (+1.0)
-     - energy 0.82 close to target 0.9 (+0.92)
-     - produced/electronic, which you prefer (+0.41)
-     - from your favorite decade (2020s) (+1.0)
-     - tags match: euphoric (+0.5)
-     - language match: english (+0.5)
-     - popular (85/100) (+0.42)
-
-2. Gym Hero - Max Pulse
-   Score: 5.89
-   Reasons:
-     - genre match: pop (+2.0)
-     - energy 0.93 close to target 0.9 (+0.97)
-     - produced/electronic, which you prefer (+0.47)
-     - from your favorite decade (2020s) (+1.0)
-     - tags match: energetic (+0.5)
-     - language match: english (+0.5)
-     - popular (88/100) (+0.44)
-
-3. Festival Sky - Aurora Drop
-   Score: 4.93
-   Reasons:
-     - mood match: happy (+1.0)
-     - energy 0.9 close to target 0.9 (+1.00)
-     - produced/electronic, which you prefer (+0.47)
-     - from your favorite decade (2020s) (+1.0)
-     - tags match: euphoric (+0.5)
-     - language match: english (+0.5)
-     - popular (92/100) (+0.46)
++---+----------------+---------------+-------+------------------------------------------------+
+| # | Title          | Artist        | Score | Reasons                                        |
++---+----------------+---------------+-------+------------------------------------------------+
+| 1 | Sunrise City   | Neon Echo     |  6.75 | genre match: pop (+2.0)                        |
+|   |                |               |       | mood match: happy (+1.0)                       |
+|   |                |               |       | energy 0.82 close to target 0.9 (+0.92)        |
+|   |                |               |       | produced/electronic, which you prefer (+0.41)  |
+|   |                |               |       | from your favorite decade (2020s) (+1.0)       |
+|   |                |               |       | tags match: euphoric (+0.5)                    |
+|   |                |               |       | language match: english (+0.5)                 |
+|   |                |               |       | popular (85/100) (+0.42)                       |
++---+----------------+---------------+-------+------------------------------------------------+
+| 2 | Gym Hero       | Max Pulse     |  5.89 | genre match: pop (+2.0)                        |
+|   |                |               |       | energy 0.93 close to target 0.9 (+0.97)        |
+|   |                |               |       | produced/electronic, which you prefer (+0.47)  |
+|   |                |               |       | from your favorite decade (2020s) (+1.0)       |
+|   |                |               |       | tags match: energetic (+0.5)                   |
+|   |                |               |       | language match: english (+0.5)                 |
+|   |                |               |       | popular (88/100) (+0.44)                       |
++---+----------------+---------------+-------+------------------------------------------------+
+| 3 | Festival Sky   | Aurora Drop   |  4.93 | mood match: happy (+1.0)                       |
+|   |                |               |       | energy 0.9 close to target 0.9 (+1.00)         |
+|   |                |               |       | produced/electronic, which you prefer (+0.47)  |
+|   |                |               |       | from your favorite decade (2020s) (+1.0)       |
+|   |                |               |       | tags match: euphoric (+0.5)                    |
+|   |                |               |       | language match: english (+0.5)                 |
+|   |                |               |       | popular (92/100) (+0.46)                       |
++---+----------------+---------------+-------+------------------------------------------------+
+| 4 | Neon Pulse     | Voltage Kids  |  4.38 | energy 0.95 close to target 0.9 (+0.95)        |
+|   |                |               |       | produced/electronic, which you prefer (+0.48)  |
+|   |                |               |       | from your favorite decade (2020s) (+1.0)       |
+|   |                |               |       | tags match: euphoric, energetic (+1.0)         |
+|   |                |               |       | language match: english (+0.5)                 |
+|   |                |               |       | popular (90/100) (+0.45)                       |
++---+----------------+---------------+-------+------------------------------------------------+
+| 5 | Rooftop Lights | Indigo Parade |  3.54 | mood match: happy (+1.0)                       |
+|   |                |               |       | energy 0.76 close to target 0.9 (+0.86)        |
+|   |                |               |       | produced/electronic, which you prefer (+0.33)  |
+|   |                |               |       | tags match: euphoric (+0.5)                    |
+|   |                |               |       | language match: english (+0.5)                 |
+|   |                |               |       | popular (70/100) (+0.35)                       |
++---+----------------+---------------+-------+------------------------------------------------+
 ```
 
-### Chill Lofi  (lofi / chill / energy 0.3, 2020s, likes calm/nostalgic, instrumental, niche)
-
-```
-1. Library Rain - Paper Lanterns
-   Score: 7.10
-   Reasons:
-     - genre match: lofi (+2.0)
-     - mood match: chill (+1.0)
-     - energy 0.35 close to target 0.3 (+0.95)
-     - acoustic, which you like (+0.43)
-     - from your favorite decade (2020s) (+1.0)
-     - tags match: calm, nostalgic (+1.0)
-     - language match: instrumental (+0.5)
-
-2. Midnight Coding - LoRoom
-   Score: 6.43
-   Reasons:
-     - genre match: lofi (+2.0)
-     - mood match: chill (+1.0)
-     - energy 0.42 close to target 0.3 (+0.88)
-     - acoustic, which you like (+0.35)
-     - from your favorite decade (2020s) (+1.0)
-     - tags match: nostalgic (+0.5)
-     - language match: instrumental (+0.5)
-
-3. Sleepy Static - LoRoom
-   Score: 5.56
-   Reasons:
-     - genre match: lofi (+2.0)
-     - energy 0.38 close to target 0.3 (+0.92)
-     - acoustic, which you like (+0.40)
-     - from your favorite decade (2020s) (+1.0)
-     - tags match: calm (+0.5)
-     - language match: instrumental (+0.5)
-```
-
-### Deep Intense Rock  (rock / intense / energy 0.85, 2010s, likes aggressive/energetic, english)
-
-```
-1. Basement Riff - Iron Alley
-   Score: 6.91
-   Reasons:
-     - genre match: rock (+2.0)
-     - mood match: intense (+1.0)
-     - energy 0.88 close to target 0.85 (+0.97)
-     - produced/electronic, which you prefer (+0.44)
-     - from your favorite decade (2010s) (+1.0)
-     - tags match: aggressive, energetic (+1.0)
-     - language match: english (+0.5)
-
-2. Storm Runner - Voltline
-   Score: 6.89
-   Reasons:
-     - genre match: rock (+2.0)
-     - mood match: intense (+1.0)
-     - energy 0.91 close to target 0.85 (+0.94)
-     - produced/electronic, which you prefer (+0.45)
-     - from your favorite decade (2010s) (+1.0)
-     - tags match: aggressive, energetic (+1.0)
-     - language match: english (+0.5)
-
-3. Gym Hero - Max Pulse
-   Score: 3.90
-   Reasons:
-     - mood match: intense (+1.0)
-     - energy 0.93 close to target 0.85 (+0.92)
-     - produced/electronic, which you prefer (+0.47)
-     - tags match: energetic, aggressive (+1.0)
-     - language match: english (+0.5)
-```
-
-### Clean Nostalgic Synthwave  (synthwave / moody / energy 0.7, 1980s, instrumental, no explicit)
-
-```
-1. Night Drive Loop - Neon Echo
-   Score: 7.01
-   Reasons:
-     - genre match: synthwave (+2.0)
-     - mood match: moody (+1.0)
-     - energy 0.75 close to target 0.7 (+0.95)
-     - produced/electronic, which you prefer (+0.39)
-     - from your favorite decade (1980s) (+1.0)
-     - tags match: nostalgic, moody (+1.0)
-     - language match: instrumental (+0.5)
-
-2. Velvet Hour - Blue Room Trio
-   Score: 3.13
-   Reasons:
-     - mood match: moody (+1.0)
-     - tags match: moody (+0.5)
-     - language match: instrumental (+0.5)
-     - niche (42/100) (+0.29)
-
-3. Midnight Coding - LoRoom
-   Score: 2.06
-   Reasons:
-     - tags match: nostalgic (+0.5)
-     - language match: instrumental (+0.5)
-```
+The app also prints a **mode comparison** and a **diversity comparison** (compact lists) after
+the tables, so you can see how switching strategies or enabling the fairness penalty re-ranks
+the results.
 
 **Screenshot or video** *(optional)*: <!-- Insert a screenshot or demo video link here -->
 
