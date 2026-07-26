@@ -2,16 +2,15 @@
 
 ## Project Summary
 
-In this project you will build and explain a small music recommender system.
+In this project I will build and explain a small music recommender system.
 
-Your goal is to:
+MY goal is to:
 
 - Represent songs and a user "taste profile" as data
 - Design a scoring rule that turns that data into recommendations
 - Evaluate what your system gets right and wrong
 - Reflect on how this mirrors real world AI recommenders
 
-Replace this paragraph with your own summary of what your version does.
 
 ---
 
