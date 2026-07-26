@@ -1,0 +1,5 @@
+[33mfea78b0[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeat/diversity-and-fairness-logic[m[33m, [m[1;31morigin/feat/diversity-and-fairness-logic[m[33m)[m feat: complete challenge 4 visual summary table and sync docs
+[33m03306e5[m feat: implement greedy diversity re-ranking helper
+[33m8866128[m[33m ([m[1;31morigin/add-advanced-song-features[m[33m, [m[1;32madd-advanced-song-features[m[33m)[m feat: implement strategy pattern for multiple scoring modes
+[33mdc888ab[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m Merge pull request #17 from codepath/claude/add-ai-grading-scaffold
+[33m3c443ef[m Remove model card content accidentally embedded in README
