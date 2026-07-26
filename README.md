@@ -4,7 +4,7 @@
 
 In this project I will build and explain a small music recommender system.
 
-MY goal is to:
+My goal is to:
 
 - Represent songs and a user "taste profile" as data
 - Design a scoring rule that turns that data into recommendations
